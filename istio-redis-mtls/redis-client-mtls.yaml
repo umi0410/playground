@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis-client-istio
+  labels:
+    app: redis-cliet-istio
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redis-client-istio
+  template:
+    metadata:
+      labels:
+        app: redis-client-istio
+        istio.io/rev: 1-16
+      annotations:
+        sidecar.istio.io/userVolume: |
+          [{
+            "name": "client-certs",
+            "secret": {
+              "secretName": "jinsu-tls",
+              "optional": false
+            }
+          }]
+        sidecar.istio.io/userVolumeMount: |
+          [{
+            "name": "client-certs",
+            "mountPath": "/client-certs",
+            "readOnly": true
+          }]
+    spec:
+      containers:
+      - name: redis-client
+        image: redis
+        command: ['bash', '-c', 'while true; do sleep 3; done;']
+      terminationGracePeriodSeconds: 1
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: DestinationRule
+metadata:
+  name: db-mtls
+spec:
+  host: foo-redis-master
+  workloadSelector:
+    matchLabels:
+      app: redis-client-istio
+  trafficPolicy:
+    tls:
+      mode: MUTUAL
+      clientCertificate: /client-certs/tls.crt
+      privateKey: /client-certs/tls.key
+      caCertificates: /client-certs/ca.crt

@@ -1,0 +1,114 @@
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: self-signed-cluster-issuer
+spec:
+  selfSigned: {}
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: self-signed-ca
+spec:
+  isCA: true
+  commonName: self-signed-ca
+  secretName: self-signed-ca-tls
+  privateKey:
+    algorithm: RSA
+  issuerRef:
+    name: self-signed-cluster-issuer
+    kind: ClusterIssuer
+    group: cert-manager.io
+  usages:
+    - client auth
+    - server auth
+---
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: intermediate-ca-issuer
+spec:
+  ca:
+    secretName: self-signed-ca-tls
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: intermediate-ca
+spec:
+  isCA: true
+  commonName: intermediate-ca
+  secretName: intermediate-ca-tls
+  privateKey:
+    algorithm: RSA
+  issuerRef:
+    name: intermediate-ca-issuer
+    kind: Issuer
+    group: cert-manager.io
+  usages:
+    - client auth
+    - server auth
+---
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: leaf-issuer
+spec:
+  ca:
+    secretName: intermediate-ca-tls
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: foo-redis
+spec:
+  secretName: foo-redis-tls
+  duration: 2160h
+  renewBefore: 360h
+  commonName: foo-redis
+  isCA: false
+  privateKey:
+    algorithm: RSA
+    encoding: PKCS1
+    size: 2048
+  usages:
+    - client auth
+    - server auth
+  dnsNames:
+    - '*.foo-redis.istio-redis-mtls.svc.cluster.local'
+    - foo-redis-master.istio-redis-mtls.svc.cluster.local
+    - '*.foo-redis-master.istio-redis-mtls.svc.cluster.local'
+    - '*.foo-redis-headless.istio-redis-mtls.svc.cluster.local'
+    - foo-redis-headless.istio-redis-mtls.svc.cluster.local
+    - 127.0.0.1
+    - localhost
+    - foo-redis
+    - foo-redis-master
+    - foo-redis-master.istio-redis-mtls
+    - foo-redis-master.istio-redis-mtls.svc.cluster.local
+  issuerRef:
+    name: leaf-issuer
+    kind: Issuer
+    group: cert-manager.io
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: jinsu
+spec:
+  secretName: jinsu-tls
+  duration: 2160h
+  renewBefore: 360h
+  commonName: jinsu
+  isCA: false
+  privateKey:
+    algorithm: RSA
+    encoding: PKCS1
+    size: 2048
+  usages:
+    - client auth
+    - server auth
+  issuerRef:
+    name: leaf-issuer
+    kind: Issuer
+    group: cert-manager.io

@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis-client
+  labels:
+    app: redis-client
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redis-client
+  template:
+    metadata:
+      labels:
+        app: redis-client
+        istio.io/rev: 1-10
+    spec:
+      containers:
+      - name: redis-client
+        image: redis
+        command: ['bash', '-c', 'while true; do sleep 3; done;']
+        volumeMounts:
+        - name: client-certs
+          mountPath: "/client-certs"
+          readOnly: true
+      volumes:
+      - name: client-certs
+        secret:
+          secretName: jinsu-tls
+          optional: false
+      terminationGracePeriodSeconds: 1
