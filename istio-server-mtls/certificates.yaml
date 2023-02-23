@@ -1,0 +1,109 @@
+# cert-manager.yaml
+# I need only 1 ClusterIssuer
+# I've already had one.
+#apiVersion: cert-manager.io/v1
+#kind: ClusterIssuer
+#metadata:
+#  name: self-signed-cluster-issuer
+#spec:
+#  selfSigned: {}
+#---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: self-signed-ca
+spec:
+  isCA: true
+  commonName: self-signed-ca
+  secretName: self-signed-ca-tls
+  privateKey:
+    algorithm: RSA
+  issuerRef:
+    name: self-signed-cluster-issuer
+    kind: ClusterIssuer
+    group: cert-manager.io
+  usages:
+    - client auth
+    - server auth
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  namespace: cert-manager
+  name: self-signed-ca
+spec:
+  isCA: true
+  commonName: self-signed-ca
+  secretName: self-signed-ca-tls
+  privateKey:
+    algorithm: RSA
+  issuerRef:
+    name: self-signed-cluster-issuer
+    kind: ClusterIssuer
+    group: cert-manager.io
+  usages:
+    - client auth
+    - server auth
+---
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: leaf-issuer
+spec:
+  ca:
+    secretName: self-signed-ca-tls
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  namespace: istio-system
+  name: server
+spec:
+  secretName: server-tls
+  duration: 2160h
+  renewBefore: 360h
+  commonName: istio-server-mtls.dev.lab.jinsu.me
+  isCA: false
+  privateKey:
+    algorithm: RSA
+    encoding: PKCS1
+    size: 2048
+  usages:
+    - client auth
+    - server auth
+  dnsNames:
+    - istio-server-mtls.dev.lab.jinsu.me
+    - server
+    - server.istio-server-mtls
+    - server.istio-server-mtls.svc.cluster.local
+    - 127.0.0.1
+    - localhost
+  issuerRef:
+    name: leaf-issuer
+    kind: ClusterIssuer
+    group: cert-manager.io
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: jinsu
+spec:
+  secretName: jinsu-tls
+  duration: 2160h
+  renewBefore: 360h
+  commonName: jinsu
+  isCA: false
+  privateKey:
+    algorithm: RSA
+    encoding: PKCS1
+    size: 2048
+  usages:
+    - client auth
+    - server auth
+    # 요건 필요 없는 듯?
+    # - digital signature
+    # - key encipherment
+  issuerRef:
+    name: leaf-issuer
+    kind: ClusterIssuer
+    group: cert-manager.io

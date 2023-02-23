@@ -1,0 +1,18 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: istio-server-mtls
+spec:
+  hosts:
+  - istio-server-mtls.dev.lab.jinsu.me
+  gateways:
+  - istio-system/customized-mtls-gateway
+  http:
+    - match:
+        - uri:
+            prefix: /
+      route:
+        - destination:
+            host: server
+            port:
+              number: 80

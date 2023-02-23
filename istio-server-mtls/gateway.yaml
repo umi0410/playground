@@ -1,0 +1,19 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: Gateway
+metadata:
+  namespace: istio-system
+  name: customized-mtls-gateway
+spec:
+  selector:
+    istio: ingressgateway
+  servers:
+    - hosts:
+        - 'istio-server-mtls.dev.lab.jinsu.me'
+      port:
+        number: 443
+        name: https
+        protocol: HTTPS
+      tls:
+        mode: MUTUAL
+#        mode: SIMPLE
+        credentialName: server-tls
