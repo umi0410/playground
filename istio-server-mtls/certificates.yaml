@@ -1,30 +1,11 @@
-# cert-manager.yaml
-# I need only 1 ClusterIssuer
-# I've already had one.
-#apiVersion: cert-manager.io/v1
-#kind: ClusterIssuer
-#metadata:
-#  name: self-signed-cluster-issuer
-#spec:
-#  selfSigned: {}
-#---
+# certificates.yaml
+# NOTE: Please check out these manifests before applying them.
 apiVersion: cert-manager.io/v1
-kind: Certificate
+kind: ClusterIssuer
 metadata:
-  name: self-signed-ca
+  name: self-signed-cluster-issuer
 spec:
-  isCA: true
-  commonName: self-signed-ca
-  secretName: self-signed-ca-tls
-  privateKey:
-    algorithm: RSA
-  issuerRef:
-    name: self-signed-cluster-issuer
-    kind: ClusterIssuer
-    group: cert-manager.io
-  usages:
-    - client auth
-    - server auth
+  selfSigned: {}
 ---
 apiVersion: cert-manager.io/v1
 kind: Certificate
@@ -41,9 +22,7 @@ spec:
     name: self-signed-cluster-issuer
     kind: ClusterIssuer
     group: cert-manager.io
-  usages:
-    - client auth
-    - server auth
+  usages: []
 ---
 apiVersion: cert-manager.io/v1
 kind: ClusterIssuer
@@ -53,6 +32,7 @@ spec:
   ca:
     secretName: self-signed-ca-tls
 ---
+# A certificate for the server
 apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
@@ -69,7 +49,6 @@ spec:
     encoding: PKCS1
     size: 2048
   usages:
-    - client auth
     - server auth
   dnsNames:
     - istio-server-mtls.dev.lab.jinsu.me
@@ -83,15 +62,16 @@ spec:
     kind: ClusterIssuer
     group: cert-manager.io
 ---
+# A client certificate for my macbook
 apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
-  name: jinsu
+  name: jinsu-macbook
 spec:
-  secretName: jinsu-tls
+  secretName: jinsu-macbook-tls
   duration: 2160h
   renewBefore: 360h
-  commonName: jinsu
+  commonName: jinsu-macbook
   isCA: false
   privateKey:
     algorithm: RSA
@@ -99,10 +79,32 @@ spec:
     size: 2048
   usages:
     - client auth
-    - server auth
-    # 요건 필요 없는 듯?
-    # - digital signature
-    # - key encipherment
+  uris:
+    - spiffe://jinsu-macbook
+  issuerRef:
+    name: leaf-issuer
+    kind: ClusterIssuer
+    group: cert-manager.io
+---
+# A client certificate for my phone
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: jinsu-phone
+spec:
+  secretName: jinsu-phone-tls
+  duration: 2160h
+  renewBefore: 360h
+  commonName: jinsu-phone
+  isCA: false
+  privateKey:
+    algorithm: RSA
+    encoding: PKCS1
+    size: 2048
+  usages:
+    - client auth
+  uris:
+    - spiffe://jinsu-phone
   issuerRef:
     name: leaf-issuer
     kind: ClusterIssuer

@@ -2,18 +2,25 @@ apiVersion: networking.istio.io/v1alpha3
 kind: Gateway
 metadata:
   namespace: istio-system
-  name: customized-mtls-gateway
+  name: mtls-gateway
 spec:
   selector:
+    # NOTE: It might be needed to update these labels.
     istio: ingressgateway
   servers:
     - hosts:
+        # NOTE: Please update this values to your hosts.
         - 'istio-server-mtls.dev.lab.jinsu.me'
       port:
         number: 443
         name: https
         protocol: HTTPS
       tls:
-        mode: MUTUAL
-#        mode: SIMPLE
+        # NOTE: This configuration is very important.
+        # Mode should be MUTUAL for the purpose of this article, to use mTLS.
+        # But first things first, set it to SIMPLE which means not mTLS but TLS.
+        # Credential name should be the name of a secret which contains
+        # your server certificates and ca bundles. (e.g. the secret resource from the
+        # certificate issued by cert-manager)
+        mode: SIMPLE # MUTUAL
         credentialName: server-tls

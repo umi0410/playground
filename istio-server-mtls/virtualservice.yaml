@@ -6,7 +6,7 @@ spec:
   hosts:
   - istio-server-mtls.dev.lab.jinsu.me
   gateways:
-  - istio-system/customized-mtls-gateway
+  - istio-system/mtls-gateway
   http:
     - match:
         - uri:

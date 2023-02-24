@@ -1,0 +1,14 @@
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  namespace: istio-system
+  name: istio-ingressgateway-deny
+spec:
+  action: DENY
+  selector:
+    matchLabels:
+      istio: ingressgateway
+  rules:
+  - from:
+      - source:
+          principals: ["jinsu-macbook"]
